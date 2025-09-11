@@ -32,5 +32,5 @@ type ExampleReply struct {
 func coordinatorSock() string {
 	s := "/var/tmp/5840-mr-"
 	s += strconv.Itoa(os.Getuid())
-	return s
+	return s 
 }
