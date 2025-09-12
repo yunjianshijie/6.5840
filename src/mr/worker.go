@@ -30,11 +30,47 @@ func ihash(key string) int {
 //
 func Worker(mapf func(string, string) []KeyValue,
 	reducef func(string, []string) string) {
+		fmt.Println("Worker is running")
+		//无限循环，不断向coordinator请求任务
+		for{
+
+			args := TaskArgs{}
+			reply := TaskReply{} // 接收任务信息 
+			ok := call("Coordinator.Example", &args, &reply) // 向coordinator请求任务
+			if ok {
+			// reply.Y should be 100.
+				fmt.Printf("reply.Y %v %v\n", reply.MsgType, reply)
+			} else {
+				fmt.Printf("call failed!\n")
+				return
+			}
+			// switch reply.MsgType {
+			    
+			// }
+
+		}
+	
 
 	// Your worker implementation here.
 
 	// uncomment to send the Example RPC to the coordinator.
-	// CallExample()
+
+
+	// declare an argument structure.
+	// args := ExampleArgs{}
+
+	// // fill in the argument(s).
+	// args.X = 99
+
+	// // declare a reply structure.
+	// reply := ExampleReply{}
+	// ok := call("Coordinator.Example", &args, &reply)
+	// if ok {
+	// 	// reply.Y should be 100.
+	// 	fmt.Printf("reply.Y %v\n", reply.Y)
+	// } else {
+	// 	fmt.Printf("call failed!\n")
+	// }
 
 }
 

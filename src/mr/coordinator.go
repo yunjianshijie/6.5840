@@ -5,14 +5,27 @@ import "net"
 import "os"
 import "net/rpc"
 import "net/http"
-
-
+import "sync"
+import "fmt"
+// coordinator 是一个管理MapReduce任务的主节点
 type Coordinator struct {
 	// Your definitions here.
-
+	mu sync.Mutex
+	files []string
+	tasks []Task
+	MapComplete bool
 }
 
 // Your code here -- RPC handlers for the worker to call.
+// Task代表一个任务（map或者reduce任务）
+type Task struct {
+    Type string
+	FileName string
+	ID int
+	Status string // 任务状态：空闲、进行中、完成"waiting"、"in-progress"、"completed"
+	WorkerID int
+}
+
 
 //
 // an example RPC handler.
@@ -49,8 +62,14 @@ func (c *Coordinator) Done() bool {
 	ret := false
 
 	// Your code here.
-
-
+	// 检查是否Map任务和Reduce任务都完成了
+	for _,task := range c.tasks {
+		if task.Status != "completed"{  //&& t.Type != "map" 
+			return false
+		}
+	}
+	ret = true
+	// 如果所有任务都完成了，则返回true
 	return ret
 }
 
@@ -61,10 +80,17 @@ func (c *Coordinator) Done() bool {
 //
 func MakeCoordinator(files []string, nReduce int) *Coordinator {
 	c := Coordinator{}
+	c.files = files
 
-	// Your code here.
-
-
+	// 创建map任务
+	for i, file := range files {
+		c.tasks = append(c.tasks, Task{Type: "map", 
+		FileName: file, 
+		ID: i,
+		Status: "waiting",})
+	}
+	fmt.Println("Coordinator: ", c.tasks)
+	// 启动RPC服务器
 	c.server()
 	return &c
 }
