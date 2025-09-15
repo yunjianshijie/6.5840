@@ -44,7 +44,6 @@ type TaskReply struct {
 	MsgType MsgType // 消息类型
 	TsakId int 		// 任务ID
 	TaskName string // 任务名称
-    Y int
 }
 
 

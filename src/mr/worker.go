@@ -4,6 +4,8 @@ import "fmt"
 import "log"
 import "net/rpc"
 import "hash/fnv"
+import "os"
+import "time"
 
 
 //
@@ -33,21 +35,33 @@ func Worker(mapf func(string, string) []KeyValue,
 		fmt.Println("Worker is running")
 		//无限循环，不断向coordinator请求任务
 		for{
-
-			args := TaskArgs{}
+			// args := TaskArgs{}
 			reply := TaskReply{} // 接收任务信息 
-			ok := call("Coordinator.Example", &args, &reply) // 向coordinator请求任务
-			if ok {
-			// reply.Y should be 100.
-				fmt.Printf("reply.Y %v %v\n", reply.MsgType, reply)
-			} else {
-				fmt.Printf("call failed!\n")
-				return
-			}
-			// switch reply.MsgType {
-			    
-			// }
+			// ok := call("Coordinator.Example", &args, &reply) // 向coordinator请求任务
 
+			switch reply.MsgType {
+				
+			case MapAlloc: 	    // coordinator向worker分配Map Task
+				 fmt.Println("MapTask")
+				 err := HandleMapTask(reply, mapf)
+			case ReduceAlloc:   // 分配Reduce Task
+				 fmt.Println("ReduceTask")
+				 err := HandleReduceTask(reply, reducef)
+
+			case Wait:			// 等待
+				// fmt.Println("Wait")
+				time.Sleep(time.Second * 10)
+			case Shutdown: 		// 终止
+				// fmt.Println("Shutdown")
+				os.Exit(0)
+			}
+			// if ok {
+			// // reply.Y should be 100.
+			// 	fmt.Printf("reply.Y %v %v\n", reply.MsgType, reply)
+			// } else {
+			// 	fmt.Printf("call failed!\n")
+			// 	return
+			// }
 		}
 	
 
@@ -57,20 +71,21 @@ func Worker(mapf func(string, string) []KeyValue,
 
 
 	// declare an argument structure.
-	// args := ExampleArgs{}
 
-	// // fill in the argument(s).
-	// args.X = 99
+}
 
-	// // declare a reply structure.
-	// reply := ExampleReply{}
-	// ok := call("Coordinator.Example", &args, &reply)
-	// if ok {
-	// 	// reply.Y should be 100.
-	// 	fmt.Printf("reply.Y %v\n", reply.Y)
-	// } else {
-	// 	fmt.Printf("call failed!\n")
-	// }
+// 如果分配到map任务
+func HandleMapTask(reply * MsgReply, mapf func(string, string) []KeyValue) error {
+     fmt.Println("HandleRMapTask")
+	// fmt.Println(reply)
+	
+}
+
+
+// 如果分配到reduce任务
+func HandleReduceTask(reply * MsgReply, reducef func(string, []string) string) error {
+	 fmt.Println("HandleReduceTask")
+	// fmt.Println(reply)
 
 }
 
