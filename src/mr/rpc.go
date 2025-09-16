@@ -14,7 +14,6 @@ import "strconv"
 // and reply for an RPC.
 //
 type MsgType int // 用于区分消息类型
-
 const (
 	AskForTask    MsgType = iota // 表示worker向coordinator申请任务
 	MapSucceed                   // 表示worker向coordinator传递Map Task完成
@@ -25,6 +24,22 @@ const (
 	ReduceAlloc                  // 表示coordinator向worker分配Reduce Task
 	Wait                         // 表示coordinator让worker休眠
 	Shutdown                     // 表示coordinator让worker终止
+)
+
+type TaskType int
+const (
+    MapTask TaskType = iota
+    ReduceTask
+    WaitTask // 让 worker 等待的任务
+    ExitTask // 让 worker 退出的任务
+)
+
+// 作业的阶段
+type JobPhase int
+const (
+	MapPhase JobPhase = iota
+	ReducePhase
+	DonePhase
 )
 
 type ExampleArgs struct {
@@ -41,9 +56,22 @@ type TaskArgs struct {
 }
 
 type TaskReply struct {
+	TaskType     TaskType // 任务类型
+	TaskId 		 int 	  // 任务ID
+	InputFile    string   // Map 任务的输入文件名
+    NReduce      int      // Reduce 任务的数量 (Map 任务需要)
+    NMap         int      // Map 任务的数量 (Reduce 任务需要)
+    ReduceTaskID int      // Reduce 任务的编号 (Reduce 任务需要)
+}
+
+type MsgReply struct {
 	MsgType MsgType // 消息类型
-	TsakId int 		// 任务ID
+	TaskId int 		// 任务ID
 	TaskName string // 任务名称
+	FileName string // 文件名
+	
+	NumReduce int // reduce任务数量
+	NumMap int // map任务数量
 }
 
 

@@ -35,36 +35,29 @@ func Worker(mapf func(string, string) []KeyValue,
 		fmt.Println("Worker is running")
 		//无限循环，不断向coordinator请求任务
 		for{
-			// args := TaskArgs{}
-			reply := TaskReply{} // 接收任务信息 
-			// ok := call("Coordinator.Example", &args, &reply) // 向coordinator请求任务
-
-			switch reply.MsgType {
-				
-			case MapAlloc: 	    // coordinator向worker分配Map Task
-				 fmt.Println("MapTask")
-				 err := HandleMapTask(reply, mapf)
-			case ReduceAlloc:   // 分配Reduce Task
+			//fmt.Println("Worker is requesting task")
+			// 请求任务
+			task := requestTask()
+			
+			// 根据任务类型执行
+			switch task.TaskType {
+			case MapTask: 	    // coordinator向worker分配Map Task
+				 fmt.Println("MapTask1")
+				 HandleMapTask(task, mapf)
+			case ReduceTask:   // 分配Reduce Task
 				 fmt.Println("ReduceTask")
-				 err := HandleReduceTask(reply, reducef)
-
-			case Wait:			// 等待
-				// fmt.Println("Wait")
+				 HandleReduceTask(task, reducef)
+			case WaitTask:			// 等待
+				 fmt.Println("WaitTask")
 				time.Sleep(time.Second * 10)
-			case Shutdown: 		// 终止
-				// fmt.Println("Shutdown")
-				os.Exit(0)
+			case ExitTask: 		// 终止
+				 fmt.Println("ExitTask")
+				 os.Exit(0)
+			// if err != nil {
+			// 	fmt.Println(err)
+			// 	}
 			}
-			// if ok {
-			// // reply.Y should be 100.
-			// 	fmt.Printf("reply.Y %v %v\n", reply.MsgType, reply)
-			// } else {
-			// 	fmt.Printf("call failed!\n")
-			// 	return
-			// }
 		}
-	
-
 	// Your worker implementation here.
 
 	// uncomment to send the Example RPC to the coordinator.
@@ -74,19 +67,38 @@ func Worker(mapf func(string, string) []KeyValue,
 
 }
 
+// call 请求任务
+func requestTask() *TaskReply {
+	
+	args := TaskArgs{}
+	reply := TaskReply{}
+    
+	ok := call("Coordinator.AssignTask", &args, &reply)
+	
+	if !ok {
+		// 如果 RPC 调用失败，意味着 coordinator 可能已经崩溃
+        // worker 无法继续工作，直接退出
+		fmt.Println("requestTask_fail")
+	    os.Exit(0)
+	}
+	return &reply
+}
+
+
+
 // 如果分配到map任务
-func HandleMapTask(reply * MsgReply, mapf func(string, string) []KeyValue) error {
+func HandleMapTask(reply * TaskReply, mapf func(string, string) []KeyValue) error {
      fmt.Println("HandleRMapTask")
 	// fmt.Println(reply)
-	
+	return nil
 }
 
 
 // 如果分配到reduce任务
-func HandleReduceTask(reply * MsgReply, reducef func(string, []string) string) error {
+func HandleReduceTask(reply * TaskReply, reducef func(string, []string) string) error {
 	 fmt.Println("HandleReduceTask")
 	// fmt.Println(reply)
-
+	return nil
 }
 
 //
@@ -109,6 +121,9 @@ func CallExample() {
 	// the "Coordinator.Example" tells the
 	// receiving server that we'd like to call
 	// the Example() method of struct Coordinator.
+	// 发送RPC请求，等待回复。
+	// "Coordinator.Example"告知接收服务器，
+	// 我们希望调用结构体Coordinator的Example()方法。
 	ok := call("Coordinator.Example", &args, &reply)
 	if ok {
 		// reply.Y should be 100.
