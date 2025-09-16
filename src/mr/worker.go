@@ -6,7 +6,7 @@ import "net/rpc"
 import "hash/fnv"
 import "os"
 import "time"
-
+import "io/ioutil"
 
 //
 // Map functions return a slice of KeyValue.
@@ -88,8 +88,54 @@ func requestTask() *TaskReply {
 
 // 如果分配到map任务
 func HandleMapTask(reply * TaskReply, mapf func(string, string) []KeyValue) error {
-     fmt.Println("HandleRMapTask")
-	// fmt.Println(reply)
+    fmt.Println("HandleMapTask")
+	fmt.Println(*reply)
+	// 读文件
+    file, err := os.Open(reply.InputFile)
+    if err != nil {
+        return err
+    }
+    defer file.Close()
+
+    content, err := ioutil.ReadAll(file)
+	if err != nil {
+		return err
+	}
+	// 执行map函数
+	kva := mapf(reply.InputFile, string(content))
+
+	// sort.Sort(ByKey(kva))
+	// 创建nPReduce个分区（是在内存00）
+	nReduce := reply.NReduce
+	intermediateFiles := make([][]KeyValue, nReduce)
+	for i :=0; i < nReduce; i++ {
+	    intermediateFiles[i] = make([]KeyValue, 0)
+	}
+
+	// 写入分区
+	for _,kv := range kva {
+		reduceIndex := ihash(kv.Key) % reply.NReduce
+		intermediateFiles[reduceIndex] = append(intermediateFiles[reduceIndex], kv)
+	}
+
+	//写到中间文件
+	for i := 0; i < nReduce; i++ {
+	    mapID := reply.TaskId
+		// 
+		// intermediateFileName := fmt.Sprintf("mr-map-temp-%d", mapID)
+
+		// 创建文件
+		tempFile, err := ioutil.TempFile("",fmt.Sprintf("mr-map-temp-%d", mapID))
+		if err != nil {
+			//? 这是啥
+			log.Fatalf("cannot create temp file")
+			return err
+		}
+		defer tempFile.Close()
+		// 写入文件
+		
+
+	}
 	return nil
 }
 
