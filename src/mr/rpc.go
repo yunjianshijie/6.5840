@@ -49,12 +49,12 @@ type ExampleArgs struct {
 type ExampleReply struct {
 	Y int
 }
-// 定义消息类型 
+// 任务类型 给 coordinator 和 worker 通信使用
 type TaskArgs struct {
-	MsgType MsgType
+	TaskType TaskType // 任务类型
 	TaskId int
 }
-
+// 任务类型 给 coordinator 和 worker 通信使用
 type TaskReply struct {
 	TaskType     TaskType // 任务类型
 	TaskId 		 int 	  // 任务ID
